@@ -191,14 +191,18 @@ half4 Tonemap4(half4 x)
 // NSS v1: cannot use image alias (too many channels). Use native tensor ops or buffer alias (SSBO).
 #if !NSS_SUPPORT_TENSOR
 // Buffer alias path: tensor aliased as a std430 SSBO — read via linear NHWC indexing.
+#if !NSS_BINDLESS
 layout(set = 0, binding = NSS_BIND_KPN_TENSOR, std430) readonly buffer KpnCoeffBuffer
 {
     int8_t4 data[];
 }
 r_coefficients_kpn_buffer;
+#endif
 #else
 // Native tensor path: read via tensorReadARM.
+#if !NSS_BINDLESS
 layout(set = 0, binding = NSS_BIND_KPN_TENSOR) uniform readonly tensorARM<tensor_t, 4> r_coefficients_kpn_tensor;
+#endif
 #endif
 
 // ---------------------------------------------------------------------------
@@ -299,7 +303,9 @@ half4 NormalizeSparseKernelWeights4(half4 weights, half4 valid_mask)
 // Input: Temporal feedback tensor (4-channel) — use image alias
 //-------------------------------------------------------------------------
 #if defined(NSS_BIND_SRV_FEEDBACK_TENSOR)
+#if !NSS_BINDLESS
 layout(set = 0, binding = NSS_BIND_SRV_FEEDBACK_TENSOR) uniform lowp texture2D r_temporal_feedback_tensor;
+#endif
 #define _TemporalTensor sampler2D(r_temporal_feedback_tensor, s_LinearClamp)
 
 // ---------------------------------------------------------------------------
@@ -328,12 +334,16 @@ void SampleTemporalParams(float2 uv, out half theta, out half alpha, out half ga
 // Input: Depth Offset (aka NearestDepthCoordTex)
 //-------------------------------------------------------------------------
 #if defined(NSS_BIND_SRV_NEAREST_DEPTH_COORD)
+#if !NSS_BINDLESS
 layout(set = 0, binding = NSS_BIND_SRV_NEAREST_DEPTH_COORD) uniform highp texture2D r_input_nearest_depth_coord;
+#endif
 #define _NearestDepthCoordTex sampler2D(r_input_nearest_depth_coord, s_LinearClamp)
 #endif
 
 #if ((NSS_FILTER_MODE == 2) || (NSS_FILTER_MODE == 3)) && defined(NSS_BIND_SRV_OFFSET_LUT)
+#if !NSS_BINDLESS
 layout(set = 0, binding = NSS_BIND_SRV_OFFSET_LUT) uniform highp utexture2D r_offset_lut;
+#endif
 #define _OffsetLutUint4Tex usampler2D(r_offset_lut, s_PointClamp)
 #endif
 
@@ -341,14 +351,18 @@ layout(set = 0, binding = NSS_BIND_SRV_OFFSET_LUT) uniform highp utexture2D r_of
 // Output: Upscaled-output (RWTexture2D UAV)
 //-------------------------------------------------------------------------
 #if defined(NSS_BIND_UAV_UPSCALED_OUTPUT)
+#if !NSS_BINDLESS
 layout(set = 0, binding = NSS_BIND_UAV_UPSCALED_OUTPUT, OUTPUT_IMG_FORMAT) uniform mediump image2D rw_upscaled_output;
+#endif
 #elif defined(NSS_BIND_RENDER_TARGET_UPSCALED_OUTPUT)
 layout(location = NSS_BIND_RENDER_TARGET_UPSCALED_OUTPUT) out FfxFloat32x4 rw_upscaled_output;
 #endif
 
 #if (defined(NSS_BIND_UAV_HISTORY_UPSCALED_COLOR) || defined(NSS_BIND_RENDER_TARGET_HISTORY_UPSCALED_COLOR)) && MANAGE_HISTORY
 #if defined(NSS_BIND_UAV_HISTORY_UPSCALED_COLOR)
+#if !NSS_BINDLESS
 layout(set = 0, binding = NSS_BIND_UAV_HISTORY_UPSCALED_COLOR, OUTPUT_IMG_FORMAT) uniform writeonly mediump image2D rw_prev_upscaled_color;
+#endif
 #elif defined(NSS_BIND_RENDER_TARGET_HISTORY_UPSCALED_COLOR)
 layout(location = NSS_BIND_RENDER_TARGET_HISTORY_UPSCALED_COLOR) out FfxFloat32x4 rw_prev_upscaled_color;
 #endif

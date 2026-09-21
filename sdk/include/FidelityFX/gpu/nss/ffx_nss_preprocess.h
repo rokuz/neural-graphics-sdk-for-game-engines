@@ -16,7 +16,9 @@
 // Input: DepthOffset tm1 (aka NearestDepthCoordTm1Tex)
 //-------------------------------------------------------------------------
 #if defined(NSS_BIND_SRV_NEAREST_DEPTH_COORD_TM1)
+#if !NSS_BINDLESS
 layout(set = 0, binding = NSS_BIND_SRV_NEAREST_DEPTH_COORD_TM1) uniform highp texture2D r_input_nearest_depth_coord_tm1;
+#endif
 #define _NearestDepthCoordTm1Tex sampler2D(r_input_nearest_depth_coord_tm1, s_LinearClamp)
 #endif
 
@@ -24,7 +26,9 @@ layout(set = 0, binding = NSS_BIND_SRV_NEAREST_DEPTH_COORD_TM1) uniform highp te
 // Input: Prev-feedback-tensor
 //-------------------------------------------------------------------------
 #if defined(NSS_BIND_SRV_FEEDBACK_TENSOR)
+#if !NSS_BINDLESS
 layout(set = 0, binding = NSS_BIND_SRV_FEEDBACK_TENSOR) uniform lowp texture2D r_temporal_feedback_tensor;
+#endif
 #define _FeedbackTensor sampler2D(r_temporal_feedback_tensor, s_LinearClamp)
 #endif
 
@@ -32,7 +36,9 @@ layout(set = 0, binding = NSS_BIND_SRV_FEEDBACK_TENSOR) uniform lowp texture2D r
 // Input: Prev-luma-deriv
 //-------------------------------------------------------------------------
 #if defined(NSS_BIND_SRV_LUMA_DERIV_TM1)
+#if !NSS_BINDLESS
 layout(set = 0, binding = NSS_BIND_SRV_LUMA_DERIV_TM1) uniform lowp texture2D r_prev_luma_deriv;
+#endif
 #define _LumaDerivTm1Tex sampler2D(r_prev_luma_deriv, s_LinearClamp)
 #endif
 
@@ -40,7 +46,9 @@ layout(set = 0, binding = NSS_BIND_SRV_LUMA_DERIV_TM1) uniform lowp texture2D r_
 // Input: Prev-depth (R32_UINT, written by depth scatter via imageAtomicMin)
 //-------------------------------------------------------------------------
 #if defined(NSS_BIND_SRV_INPUT_DEPTH_TM1)
+#if !NSS_BINDLESS
 layout(set = 0, binding = NSS_BIND_SRV_INPUT_DEPTH_TM1) uniform highp utexture2D r_prev_depth;
+#endif
 #define _DepthTm1Tex usampler2D(r_prev_depth, s_PointClamp)
 #endif
 
@@ -48,7 +56,9 @@ layout(set = 0, binding = NSS_BIND_SRV_INPUT_DEPTH_TM1) uniform highp utexture2D
 // Input: Low-quality disocclusion mask (used by half-res preprocess path)
 //-------------------------------------------------------------------------
 #if defined(NSS_BIND_SRV_DISOCCLUSION_MASK_LQ)
+#if !NSS_BINDLESS
 layout(set = 0, binding = NSS_BIND_SRV_DISOCCLUSION_MASK_LQ) uniform highp texture2D r_disocclusion_mask_lq;
+#endif
 #define _DisocclusionMaskLQTex sampler2D(r_disocclusion_mask_lq, s_LinearClamp)
 #endif
 
@@ -57,9 +67,13 @@ layout(set = 0, binding = NSS_BIND_SRV_DISOCCLUSION_MASK_LQ) uniform highp textu
 //-------------------------------------------------------------------------
 #if defined(NSS_BIND_UAV_LUMA_DERIV)
 #if NSS_YCOCG_LUMA_DERIVATIVE
+#if !NSS_BINDLESS
 layout(set = 0, binding = NSS_BIND_UAV_LUMA_DERIV, rgba8_snorm) uniform writeonly image2D rw_luma_deriv;
+#endif
 #else
+#if !NSS_BINDLESS
 layout(set = 0, binding = NSS_BIND_UAV_LUMA_DERIV, rg8) uniform writeonly lowp image2D rw_luma_deriv;
+#endif
 #endif  // NSS_YCOCG_LUMA_DERIVATIVE
 #elif defined(NSS_BIND_RENDER_TARGET_LUMA_DERIV)
 layout(location = NSS_BIND_RENDER_TARGET_LUMA_DERIV) out FfxFloat32x4 rw_luma_deriv;
@@ -70,9 +84,13 @@ layout(location = NSS_BIND_RENDER_TARGET_LUMA_DERIV) out FfxFloat32x4 rw_luma_de
 //-------------------------------------------------------------------------
 #if defined(NSS_BIND_UAV_NEAREST_DEPTH_COORD)
 #if NSS_PACKED_NEAREST_OFFSET_QUAD
+#if !NSS_BINDLESS
 layout(set = 0, binding = NSS_BIND_UAV_NEAREST_DEPTH_COORD, rg8) uniform mediump image2D rw_nearest_depth_coord_out;
+#endif
 #else
+#if !NSS_BINDLESS
 layout(set = 0, binding = NSS_BIND_UAV_NEAREST_DEPTH_COORD, r8) uniform mediump image2D rw_nearest_depth_coord_out;
+#endif
 #endif
 #elif defined(NSS_BIND_RENDER_TARGET_NEAREST_DEPTH_COORD)
 layout(location = NSS_BIND_RENDER_TARGET_NEAREST_DEPTH_COORD) out FfxFloat32x4 rw_nearest_depth_coord_out;
@@ -84,14 +102,18 @@ layout(location = NSS_BIND_RENDER_TARGET_NEAREST_DEPTH_COORD) out FfxFloat32x4 r
 //-------------------------------------------------------------------------
 #if defined(NSS_BIND_PREPROCESS_INPUT_TENSOR)
 #if NSS_SUPPORT_TENSOR
+#if !NSS_BINDLESS
 layout(set = 0, binding = NSS_BIND_PREPROCESS_INPUT_TENSOR) uniform tensorARM<tensor_t, 4> rw_preprocessed_tensor;
+#endif
 #define _PreprocessTensor rw_preprocessed_tensor
 #else
+#if !NSS_BINDLESS
 layout(set = 0, binding = NSS_BIND_PREPROCESS_INPUT_TENSOR, std430) buffer PreprocessInputTensorBuffer
 {
     int8_t4 data[];
 }
 rw_preprocessed_tensor_buffer;
+#endif
 #endif
 #endif
 

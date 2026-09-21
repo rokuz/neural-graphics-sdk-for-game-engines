@@ -12,6 +12,10 @@
 
 #include "ffx_core.h"
 
+#if NSS_BINDLESS
+#include "nss/ffx_nss_bindless.h"
+#endif
+
 #if QUANTIZED
 #define tensor_t    int8_t
 #define tensorVec_t int8_t4
@@ -104,6 +108,7 @@
 // declare CBs and CB accessors
 ///////////////////////////////////////////////
 #if defined(NSS_BIND_CB_NSS)
+#if !NSS_BINDLESS
 layout(set = 0, binding = NSS_BIND_CB_NSS, std140) uniform cbNSS_t
 {
     // ─────────────── 32bit precision objects ───────────────
@@ -142,6 +147,7 @@ layout(set = 0, binding = NSS_BIND_CB_NSS, std140) uniform cbNSS_t
     int32_t2 _LutOffset;           // 8 B jitter tile offset, xy order
 }
 cbNSS;
+#endif
 
 //--------------------------------------------------------------
 // cbNSS accessor helpers.
@@ -235,8 +241,12 @@ float2 KpnScale()
 #define NSS_DEBUG_VIEW_MODE_TENSOR_LUMA_INSTABILITY  (15)  // row3,col2 luma_instability (tensor)
 #define NSS_DEBUG_VIEW_MODE_TENSOR_WARP_FEEDBACK     (16)  // row3,col3 warp_feedback (tensor)
 
+#if !NSS_BINDLESS
 layout(set = 0, binding = 1000) uniform sampler s_PointClamp;
+#endif
+#if !NSS_BINDLESS
 layout(set = 0, binding = 1001) uniform sampler s_LinearClamp;
+#endif
 
 //=========================================================================
 // Common Resources for all passes
@@ -246,7 +256,9 @@ layout(set = 0, binding = 1001) uniform sampler s_LinearClamp;
 // Input: color-jittered
 //-------------------------------------------------------------------------
 #if defined(NSS_BIND_SRV_INPUT_COLOR_JITTERED)
+#if !NSS_BINDLESS
 layout(set = 0, binding = NSS_BIND_SRV_INPUT_COLOR_JITTERED) uniform mediump texture2D r_input_color_jittered;
+#endif
 #define _ColourTex sampler2D(r_input_color_jittered, s_LinearClamp)
 #endif
 
@@ -254,7 +266,9 @@ layout(set = 0, binding = NSS_BIND_SRV_INPUT_COLOR_JITTERED) uniform mediump tex
 // Input: motion-vectors
 //-------------------------------------------------------------------------
 #if defined(NSS_BIND_SRV_INPUT_MOTION_VECTORS)
+#if !NSS_BINDLESS
 layout(set = 0, binding = NSS_BIND_SRV_INPUT_MOTION_VECTORS) uniform mediump texture2D r_input_motion_vectors;
+#endif
 #define _MotionTex sampler2D(r_input_motion_vectors, s_LinearClamp)
 #endif
 
@@ -262,7 +276,9 @@ layout(set = 0, binding = NSS_BIND_SRV_INPUT_MOTION_VECTORS) uniform mediump tex
 // Input: Prev-upscaled-color
 //-------------------------------------------------------------------------
 #if defined(NSS_BIND_SRV_HISTORY_UPSCALED_COLOR)
+#if !NSS_BINDLESS
 layout(set = 0, binding = NSS_BIND_SRV_HISTORY_UPSCALED_COLOR) uniform mediump texture2D r_prev_upscaled_color;
+#endif
 #define _HistoryTex sampler2D(r_prev_upscaled_color, s_LinearClamp)
 #endif
 
@@ -270,7 +286,9 @@ layout(set = 0, binding = NSS_BIND_SRV_HISTORY_UPSCALED_COLOR) uniform mediump t
 // Input: Input-depth (used by depth-scatter and preprocess passes)
 //-------------------------------------------------------------------------
 #if defined(NSS_BIND_SRV_INPUT_DEPTH)
+#if !NSS_BINDLESS
 layout(set = 0, binding = NSS_BIND_SRV_INPUT_DEPTH) uniform highp texture2D r_input_depth;
+#endif
 #define _DepthTex sampler2D(r_input_depth, s_PointClamp)
 
 float2 GatherQuadUvFromTL(int32_t2 base, float2 inv_size)
@@ -292,7 +310,9 @@ float4 GatherDepthQuadTLBR(int32_t2 base, float2 inv_size)
 //         Shared by depth-scatter (write) and preprocess (read via SRV alias)
 //-------------------------------------------------------------------------
 #if defined(NSS_BIND_UAV_DEPTH_TM1)
+#if !NSS_BINDLESS
 layout(set = 0, binding = NSS_BIND_UAV_DEPTH_TM1, r32ui) coherent uniform uimage2D rw_reconstructed_prev_depth;
+#endif
 #endif
 
 #define FLT_MIN            1.175494351e-38
@@ -736,7 +756,9 @@ BilinearSamplingData GetBilinearSamplingData(float2 fUv, int32_t2 iSize)
 // Output: debug views UAV (compute path)
 //--------------------------------------------------------------
 #if defined(NSS_BIND_UAV_DEBUG_VIEWS)
+#if !NSS_BINDLESS
 layout(set = 0, binding = NSS_BIND_UAV_DEBUG_VIEWS, r11f_g11f_b10f) uniform mediump image2D rw_debug_views;
+#endif
 void StoreDebugView(int32_t2 iPxPos, float4 v)
 {
     imageStore(rw_debug_views, iPxPos, v);
