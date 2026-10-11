@@ -39,6 +39,11 @@ layout(std430, buffer_reference) readonly buffer NssConstantsRef {
   ivec2 _LutOffset;
 };
 
+// a linear NHWC tensor reached through the device address of the buffer its memory is bound to
+layout(std430, buffer_reference) buffer NssTensorRef {
+  int8_t4 data[];
+};
+
 // `NssPushConstants` on the host side
 layout(push_constant) uniform PushConstants {
   NssConstantsRef constants;
@@ -56,8 +61,8 @@ layout(push_constant) uniform PushConstants {
   uint imgLumaDeriv; // rw_luma_deriv
   uint imgNearestDepthCoord; // rw_nearest_depth_coord_out
   uint imgOutput; // rw_upscaled_output
-  uint tensorInput; // rw_preprocessed_tensor
-  uint tensorKpn; // r_coefficients_kpn_tensor
+  NssTensorRef tensorInput; // rw_preprocessed_tensor_buffer
+  NssTensorRef tensorKpn; // r_coefficients_kpn_buffer
 } pc;
 
 // The host renderer declares the bindless texture and sampler arrays for fragment shaders only: compute shaders declare their own
@@ -90,8 +95,7 @@ layout(set = 0, binding = 2, rgba16f) uniform image2D kImagesRGBA16F[];
 #define rw_nearest_depth_coord_out kImagesR8[pc.imgNearestDepthCoord]
 #define rw_upscaled_output kImagesRGBA16F[pc.imgOutput]
 
-// tensors: `kTensorsI8_4[]` is declared by the host renderer (`tensorARM<int8_t, 4>`)
-#define rw_preprocessed_tensor kTensorsI8_4[pc.tensorInput]
-#define r_coefficients_kpn_tensor kTensorsI8_4[pc.tensorKpn]
+#define rw_preprocessed_tensor_buffer pc.tensorInput
+#define r_coefficients_kpn_buffer pc.tensorKpn
 
 #endif // FFX_NSS_BINDLESS_H
